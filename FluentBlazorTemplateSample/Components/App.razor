@@ -9,11 +9,13 @@
     <link rel="stylesheet" href="@Assets["FluentBlazorTemplateSample.styles.css"]" />
     <ImportMap />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <HeadOutlet />
+    @* @rendermode="InteractiveServer" 로 설정 *@
+    <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
 <body>
-    <Routes />
+    @* @rendermode="InteractiveServer" 로 설정 *@
+    <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
 </body>
 

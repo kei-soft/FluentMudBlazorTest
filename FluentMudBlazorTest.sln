@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentBlazorSample", "Fluen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentBlazorTemplateSample", "FluentBlazorTemplateSample\FluentBlazorTemplateSample.csproj", "{FD54981F-FEA6-4116-BE61-CD55E94D0954}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluientMudBlazorApp", "FluientMudBlazorApp\FluientMudBlazorApp.csproj", "{A6D1321D-EF9F-4A81-B6B0-FECEAFAF143C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{FD54981F-FEA6-4116-BE61-CD55E94D0954}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FD54981F-FEA6-4116-BE61-CD55E94D0954}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FD54981F-FEA6-4116-BE61-CD55E94D0954}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A6D1321D-EF9F-4A81-B6B0-FECEAFAF143C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A6D1321D-EF9F-4A81-B6B0-FECEAFAF143C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A6D1321D-EF9F-4A81-B6B0-FECEAFAF143C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A6D1321D-EF9F-4A81-B6B0-FECEAFAF143C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

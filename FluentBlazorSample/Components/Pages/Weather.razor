@@ -13,31 +13,19 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th aria-label="Temperature in Celsius">Temp. (C)</th>
-                <th aria-label="Temperature in Farenheit">Temp. (F)</th>
-                <th>Summary</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var forecast in forecasts)
-            {
-                <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <div >
+        <!-- This page is rendered in SSR mode, so the FluentDataGrid component does not offer any interactivity (like sorting). -->
+        <FluentDataGrid Id="weathergrid" Items="@forecasts" GridTemplateColumns="1fr 1fr 1fr 2fr" TGridItem="WeatherForecast" Virtualize="true" style="height: 400px;">
+            <PropertyColumn Title="Date" Property="@(c => c!.Date)" Align="Align.Start" />
+            <PropertyColumn Title="Temp. (C)" Property="@(c => c!.TemperatureC)" Align="Align.Center" />
+            <PropertyColumn Title="Temp. (F)" Property="@(c => c!.TemperatureF)" Align="Align.Center" />
+            <PropertyColumn Title="Summary" Property="@(c => c!.Summary)" Align="Align.End" />
+        </FluentDataGrid>
+    </div>
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private IQueryable<WeatherForecast>? forecasts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -46,12 +34,12 @@ else
 
         var startDate = DateOnly.FromDateTime(DateTime.Now);
         var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        {
-            Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
+        forecasts = Enumerable.Range(1, 500).Select(index => new WeatherForecast
+            {
+                Date = startDate.AddDays(index),
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary = summaries[Random.Shared.Next(summaries.Length)]
+            }).AsQueryable();
     }
 
     private class WeatherForecast
@@ -62,3 +50,25 @@ else
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
     }
 }
+
+
+            @* 
+    <div style="height: 400px;">
+        <FluentDataGrid Items="@Items" ResizableColumns="true" GenerateHeader="GenerateHeaderOption.Sticky"
+                        GridTemplateColumns="1fr 1fr 1fr 1fr 1fr" Style="height: 100%;">
+            <PropertyColumn Property="@(c => c.Id)" Title="번호" />
+            <PropertyColumn Property="@(c => c.Name)" Title="이름" />
+            <PropertyColumn Property="@(c => c.Department)" Title="부서" />
+            <PropertyColumn Property="@(c => c.Position)" Title="직급" />
+            <PropertyColumn Property="@(c => c.JoinDate)" Title="입사일" />
+            <Virtualize Items="@Items" Context="item" ItemSize="40">
+                <FluentDataGridRow ItemType="Employee" Item="@item">
+                    <FluentDataGridCell GridColumn="1">@item.Id</FluentDataGridCell>
+                    <FluentDataGridCell GridColumn="2">@item.Name</FluentDataGridCell>
+                    <FluentDataGridCell GridColumn="3">@item.Department</FluentDataGridCell>
+                    <FluentDataGridCell GridColumn="4">@item.Position</FluentDataGridCell>
+                    <FluentDataGridCell GridColumn="5">@item.JoinDate</FluentDataGridCell>
+                </FluentDataGridRow>
+            </Virtualize>
+        </FluentDataGrid>
+    </div> *@

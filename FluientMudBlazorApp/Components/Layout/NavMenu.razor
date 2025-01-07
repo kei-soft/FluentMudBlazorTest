@@ -1,30 +1,17 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">FluientMudBlazorApp</a>
-    </div>
-</div>
+﻿@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.FluentUI.AspNetCore.Components.Icons.Regular
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
+<div class="navmenu">
+    <label for="navmenu-toggle" class="navmenu-icon"><FluentIcon Value="@(new Size20.Navigation())" Color="Microsoft.FluentUI.AspNetCore.Components.Color.Fill" /></label>
+    <nav class="sitenav" aria-labelledby="main-menu">
+        <FluentNavMenu Id="main-menu" Collapsible="true" Width="250" Title="Navigation menu" @bind-Expanded="expanded" CustomToggle="true">
+            <FluentNavLink Href="/" Match="NavLinkMatch.All" Icon="@(new Size20.Home())" IconColor="Microsoft.FluentUI.AspNetCore.Components.Color.Accent">Home</FluentNavLink>
+            <FluentNavLink Href="counter" Icon="@(new Size20.NumberSymbolSquare())" IconColor="Microsoft.FluentUI.AspNetCore.Components.Color.Accent">Counter</FluentNavLink>
+            <FluentNavLink Href="weather" Icon="@(new Size20.WeatherPartlyCloudyDay())" IconColor="Microsoft.FluentUI.AspNetCore.Components.Color.Accent">Weather</FluentNavLink>
+        </FluentNavMenu>
     </nav>
 </div>
 
+@code {
+    private bool expanded = true;
+}
