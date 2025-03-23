@@ -1,4 +1,7 @@
 ﻿@page "/"
+@using MudBlazor.Extensions
+@using MudBlazor.Extensions.Options
+@inject MudBlazor.IDialogService DialogService
 
 <PageTitle>Home</PageTitle>
 
@@ -11,3 +14,19 @@
         <b>www.mudblazor.com</b>
     </MudLink>
 </MudAlert>
+
+<MudButton OnClick="ShowDialog">dialog</MudButton>
+
+@code
+{
+    private async Task ShowDialog()
+    {
+        var options = new DialogOptionsEx { CloseOnEscapeKey = true, DragMode = MudDialogDragMode.Simple };
+
+        var res = await DialogService.ShowEx<ItemDialog>("Simple Dialog", options);
+
+        //var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        //var dialog = await DialogService.ShowAsync<ItemDialog>("Simple Dialog", options);
+    }
+}

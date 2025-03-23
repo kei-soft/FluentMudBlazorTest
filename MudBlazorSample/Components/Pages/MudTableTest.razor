@@ -1,0 +1,86 @@
+﻿@page "/table"
+@attribute [StreamRendering]
+
+@using System.Collections.Generic
+@using System.Linq
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    <MudText Typo="Typo.h5" Class="mb-4">조건 그리드</MudText>
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               OnClick="@ButtonClicked">
+        Click Me
+    </MudButton>
+
+    <MudText Class="mt-4">
+        @_message
+    </MudText>
+
+    <MudPaper Elevation="3" Class="pa-4">
+        <MudTable Items="@_conditions" Hover="true" FixedHeader="true" Height="300px" Dense="true">
+            <HeaderContent>
+                <MudTh>Value</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <MudTextField @bind-Value="context.Value" Variant="Variant.Outlined"></MudTextField>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+        <MudStack Row="true" Class="mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddCondition">조건 추가</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="RemoveCondition" Disabled="@(_conditions.Count == 0)">조건 제거</MudButton>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="ProcessData">확인</MudButton>
+        </MudStack>
+        @if (!string.IsNullOrEmpty(_result))
+        {
+            <MudDivider Class="my-4" />
+            <MudText Typo="Typo.body1">결과: @_result</MudText>
+        }
+    </MudPaper>
+</MudContainer>
+@code {
+    private List<ConditionItem> _conditions = new();
+    private string _result = string.Empty;
+    private ConditionItem _selectedItem;
+    private string _message = "";
+
+    private void ButtonClicked()
+    {
+        _message = "Button was clicked at " + DateTime.Now.ToString();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    private void AddCondition(MouseEventArgs e)
+    {
+        _conditions.Add(new ConditionItem { Value = string.Empty });
+    }
+    private void RemoveCondition(MouseEventArgs e)
+    {
+        if (_selectedItem != null && _conditions.Contains(_selectedItem))
+        {
+            _conditions.Remove(_selectedItem);
+            _selectedItem = null;
+        }
+        else if (_conditions.Count > 0)
+        {
+            _conditions.RemoveAt(_conditions.Count - 1);
+        }
+    }
+    private void ProcessData()
+    {
+        // 빈 값을 제외하고 콤마로 연결
+        _result = string.Join(",", _conditions
+            .Where(c => !string.IsNullOrWhiteSpace(c.Value))
+            .Select(c => c.Value));
+    }
+    public class ConditionItem
+    {
+        public string Value { get; set; } = string.Empty;
+    }
+}

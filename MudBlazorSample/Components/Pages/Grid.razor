@@ -1,0 +1,116 @@
+﻿@page "/Grid"
+@using System.Dynamic
+@using System.Data
+@using Dapper
+@inject IDbConnection DbConnection
+
+<h3>GridTest</h3>
+<h2>SelectName : @selectedName</h2>
+<MudButton OnClick="OnBinding">Binding</MudButton>
+<MudDataGrid 
+T="object"
+Items="@dynamicItems"
+Dense ="true"
+MultiSelection="false"
+RowStyleFunc="@RowStyleFunc">
+    @foreach (var property in propertyNames)
+    {
+        <PropertyColumn Property="@(item => ((IDictionary<string, object>)item)[property])" Title="@property" />
+    }
+</MudDataGrid>
+<MudDataGrid Dense="true" Items="@employees" Filterable="false" SortMode="@SortMode.None" Groupable="false" RowHeight="30px">
+    <Columns>
+        <PropertyColumn Property="x => x.Name"/>
+        @* <PropertyColumn Property="x => x.Position" /> *@
+        <TemplateColumn>
+            <CellTemplate>
+                <MudStack Row>
+                    <MudTextField AdornmentColor="Color.Transparent" Variant="Variant.Filled">@context.Item.Position</MudTextField>
+                </MudStack>
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="x => x.YearsEmployed" Title="Years Employed" />
+        <PropertyColumn Property="x => x.Salary" Format="C" />
+        <PropertyColumn Property="x => x.Salary * x.YearsEmployed" Title="Total Earned" Format="C" />
+
+        <TemplateColumn CellClass="d-flex justify-end">
+            <CellTemplate>
+                <MudStack Row>
+                    <MudRating Size="@Size.Small" SelectedValue="@context.Item.Rating" />
+                    <MudButton Size="@Size.Small" Variant="@Variant.Filled" Color="@Color.Primary">Hire</MudButton>
+                </MudStack>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+</MudDataGrid>
+@code {
+
+
+    private IEnumerable<dynamic>? dynamicItems;
+    private List<string> propertyNames = new List<string>();
+    private object selectedItem;
+    private string selectedName = "";
+
+
+    public record Employee(string Name, string Position, int YearsEmployed, int Salary, int Rating);
+    public IEnumerable<Employee> employees;
+
+    private async Task OnBinding(MouseEventArgs e)
+    {
+        dynamicItems = await DbConnection.QueryAsync("SELECT * FROM Products");
+
+        // 첫 번째 아이템에서 속성 이름 추출
+        if (dynamicItems.Count() > 0)
+        {
+            var firstItem = dynamicItems.FirstOrDefault() as IDictionary<string, object>;
+            propertyNames = firstItem.Keys.ToList();
+        }
+
+
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        employees = new List<Employee>
+        {
+            new Employee("Sam", "CPA", 23, 87_000, 4),
+            new Employee("Alicia", "Product Manager", 11, 143_000, 5),
+            new Employee("Ira", "Developer", 4, 92_000, 3),
+            new Employee("John", "IT Director", 17, 229_000, 4),
+        };
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+           
+        }
+
+        //return base.OnAfterRenderAsync(firstRender);
+    }
+
+    private void RowClickEvent(DataGridRowClickEventArgs<ExpandoObject> args)
+    {
+        selectedItem = args.Item;
+        var dict = selectedItem as IDictionary<string, object>;
+        if(dict.TryGetValue("Name", out object? name))
+        {
+            selectedName = name == null? "" : name.ToString();
+        }
+    }
+
+    private string RowStyleFunc(object? item, int index)
+    {
+        if (item == selectedItem)
+        {
+            // 선택된 행에 테두리, 배경색, 그림자 효과 적용
+            return "background-color: #BBDefB; border: 1px solid #1976D2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
+        }
+
+        return index % 2 == 0 ? "" : "background-color: #f5f5f5;";
+    }
+
+}
