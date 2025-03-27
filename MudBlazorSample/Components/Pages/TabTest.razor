@@ -1,0 +1,24 @@
+﻿@page "/tab"
+<DockableTabs @ref="_dockableTabs">
+    <!-- 선택적: 초기 탭 설정 -->
+</DockableTabs>
+@code {
+    private DockableTabs? _dockableTabs;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender && _dockableTabs != null)
+        {
+            _dockableTabs.AddTab("첫 번째 탭", builder =>
+            {
+                builder.OpenComponent<Home>(0);
+                builder.CloseComponent();
+            });
+            _dockableTabs.AddTab("두 번째 탭", builder =>
+            {
+                builder.OpenComponent<Home>(0);
+                builder.CloseComponent();
+            });
+        }
+    }
+}

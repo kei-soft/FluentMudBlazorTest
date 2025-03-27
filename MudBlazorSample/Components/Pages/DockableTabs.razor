@@ -1,0 +1,280 @@
+﻿@using MudBlazor
+@using System.Collections.ObjectModel
+
+<style>
+    .dockable-tab {
+        cursor: move;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 5px;
+    }
+
+    .dock-highlight {
+        border: 2px solid blue;
+        background-color: rgba(0, 0, 255, 0.1);
+    }
+
+    .tab-container {
+        position: relative;
+    }
+
+    .dock-overlay {
+        position: absolute;
+        z-index: 1000;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.5;
+    }
+
+    .dock-overlay-top {
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+    }
+
+    .dock-overlay-bottom {
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 50px;
+    }
+
+    .dock-overlay-left {
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 50px;
+    }
+
+    .dock-overlay-right {
+        top: 0;
+        bottom: 0;
+        right: 0;
+        width: 50px;
+    }
+</style>
+
+<div class="tab-container">
+    <MudTabs @ref="_tabs"
+             Elevation="0"
+             Outlined="true"
+             ApplyEffectsToContainer="true"
+             Class="dockable-tabs">
+        @foreach (var tab in Tabs)
+        {
+            <MudTabPanel Text="@tab.Title">
+                <ChildContent>
+                    @tab.Content
+                </ChildContent>
+            </MudTabPanel>
+        }
+    </MudTabs>
+
+    @* Custom Tab Headers *@
+    <div class="mud-tabs-toolbar">
+        @foreach (var tab in Tabs)
+        {
+            <div class="dockable-tab mud-tab"
+                 draggable="true"
+            @ondragstart:preventDefault
+                 @ondragstart="@(e => StartDragging(e, tab))"
+                 @ondragend="@(e => EndDragging(e))"
+            @ondragover:preventDefault
+                 @ondragover="@(e => DragOver(e))"
+                 @ondragleave="@(e => DragLeave(e))"
+                 @onclick="@(() => SelectTab(tab))">
+                @tab.Title
+                <MudIconButton Icon="@Icons.Material.Filled.Close"
+                               Size="Size.Small"
+                               OnClick="@(() => RemoveTab(tab))" />
+            </div>
+        }
+    </div>
+
+    @* Dock Overlays *@
+    @if (_isDragging)
+    {
+        <div class="dock-overlay dock-overlay-top @(_highlightTop ? "dock-highlight" : "")"
+        @ondragover:preventDefault
+             @ondragover="@(e => DragOverTop(e))"
+        @ondrop:preventDefault
+             @ondrop="@(e => DropTab(DockPosition.Top))">
+        </div>
+        <div class="dock-overlay dock-overlay-bottom @(_highlightBottom ? "dock-highlight" : "")"
+        @ondragover:preventDefault
+             @ondragover="@(e => DragOverBottom(e))"
+        @ondrop:preventDefault
+             @ondrop="@(e => DropTab(DockPosition.Bottom))">
+        </div>
+        <div class="dock-overlay dock-overlay-left @(_highlightLeft ? "dock-highlight" : "")"
+        @ondragover:preventDefault
+             @ondragover="@(e => DragOverLeft(e))"
+        @ondrop:preventDefault
+             @ondrop="@(e => DropTab(DockPosition.Left))">
+        </div>
+        <div class="dock-overlay dock-overlay-right @(_highlightRight ? "dock-highlight" : "")"
+        @ondragover:preventDefault
+             @ondragover="@(e => DragOverRight(e))"
+        @ondrop:preventDefault
+             @ondrop="@(e => DropTab(DockPosition.Right))">
+        </div>
+    }
+</div>
+
+@code {
+    // Dock position enum
+    public enum DockPosition
+    {
+        Top,
+        Bottom,
+        Left,
+        Right
+    }
+
+    // Tab model
+    public class DockableTab
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Title { get; set; } = string.Empty;
+        public RenderFragment? Content { get; set; }
+        public DockPosition CurrentPosition { get; set; } = DockPosition.Top;
+    }
+
+    // Private fields
+    private MudTabs? _tabs;
+    private bool _isDragging = false;
+    private DockableTab? _draggedTab;
+
+    // Highlight states
+    private bool _highlightTop = false;
+    private bool _highlightBottom = false;
+    private bool _highlightLeft = false;
+    private bool _highlightRight = false;
+
+    // Observable collection of tabs
+    public ObservableCollection<DockableTab> Tabs { get; } = new();
+
+    // Select a tab
+    private void SelectTab(DockableTab tab)
+    {
+        // Implement tab selection logic if needed
+        StateHasChanged();
+    }
+
+    // Drag start handler
+    private void StartDragging(DragEventArgs e, DockableTab tab)
+    {
+        _isDragging = true;
+        _draggedTab = tab;
+
+        // Reset all highlights
+        ResetHighlights();
+    }
+
+    // Drag over handler
+    private void DragOver(DragEventArgs e)
+    {
+        // Intentionally left empty as we're using @ondragover:preventDefault
+    }
+
+    // Drag end handler
+    private void EndDragging(DragEventArgs e)
+    {
+        _isDragging = false;
+        _draggedTab = null;
+
+        // Reset all highlights
+        ResetHighlights();
+    }
+
+    // Drag over handlers with highlighting
+    private void DragOverTop(DragEventArgs e)
+    {
+        _highlightTop = true;
+        _highlightBottom = false;
+        _highlightLeft = false;
+        _highlightRight = false;
+    }
+
+    private void DragOverBottom(DragEventArgs e)
+    {
+        _highlightTop = false;
+        _highlightBottom = true;
+        _highlightLeft = false;
+        _highlightRight = false;
+    }
+
+    private void DragOverLeft(DragEventArgs e)
+    {
+        _highlightTop = false;
+        _highlightBottom = false;
+        _highlightLeft = true;
+        _highlightRight = false;
+    }
+
+    private void DragOverRight(DragEventArgs e)
+    {
+        _highlightTop = false;
+        _highlightBottom = false;
+        _highlightLeft = false;
+        _highlightRight = true;
+    }
+
+    // Drag leave handler
+    private void DragLeave(DragEventArgs e)
+    {
+        ResetHighlights();
+    }
+
+    // Reset highlight states
+    private void ResetHighlights()
+    {
+        _highlightTop = false;
+        _highlightBottom = false;
+        _highlightLeft = false;
+        _highlightRight = false;
+    }
+
+    // Drop tab handler
+    private void DropTab(DockPosition newPosition)
+    {
+        if (_draggedTab == null) return;
+
+        // Update tab position
+        _draggedTab.CurrentPosition = newPosition;
+
+        // Reset highlights
+        ResetHighlights();
+        _isDragging = false;
+        StateHasChanged();
+    }
+
+    // Method to add a new tab
+    public void AddTab(string title, RenderFragment content)
+    {
+        Tabs.Add(new DockableTab
+            {
+                Title = title,
+                Content = content
+            });
+        StateHasChanged();
+    }
+
+    // Method to remove a tab
+    public void RemoveTab(DockableTab tab)
+    {
+        Tabs.Remove(tab);
+        StateHasChanged();
+    }
+
+    // Optional: Method to get current tab layout
+    public List<(string TabId, DockPosition Position)> GetTabLayout()
+    {
+        return Tabs.Select(t => (t.Id, t.CurrentPosition)).ToList();
+    }
+}
