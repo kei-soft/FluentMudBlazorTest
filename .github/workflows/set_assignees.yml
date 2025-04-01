@@ -1,0 +1,33 @@
+name: Set assigness
+
+on:
+  pull_request:
+    types:
+      - opened
+
+jobs:
+  set-assignees:
+    name: Set assignees
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Set assignees
+        run: |
+          OWNER="$"
+          REPOSITORY="$"
+          TOKEN="$"
+          PULL_REQUEST_NUMBER="$"
+
+          ASSIGNEES=$(curl -s \
+            "https://api.github.com/repos/$OWNER/$REPOSITORY/issues/$PULL_REQUEST_NUMBER" | \
+            jq --raw-output '.assignees // [] | .[].login')
+
+          if [ -z "$ASSIGNEES" ]; then
+            ASSIGNEE=$
+
+            curl -X POST \
+              -H "Content-Type: application/json" \
+              -H "Authorization: token $TOKEN" \
+              -d "{ \"assignees\": \"${ASSIGNEE}\" }" \
+              https://api.github.com/repos/$REPOSITORY/issues/$PULL_REQUEST_NUMBER/assignees
+          fi
