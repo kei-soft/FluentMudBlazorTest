@@ -1,0 +1,127 @@
+﻿@page "/selectgrid"
+@using System.Dynamic
+@using System.Data
+@using Dapper
+@inject IDbConnection DbConnection
+
+<style>
+    /* 텍스트 선택 방지 클래스 */
+    .no-text-select {
+    user-select: none;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    }
+</style>
+
+
+<h3>GridTest</h3>
+<MudPaper Class="pa-4" Style="height: 100vh;" @onkeydown="HandleKeyDown" @onkeyup="HandleKeyUp" tabindex="0">
+    <MudDataGrid T="string"
+    Items="@Items"
+    MultiSelection="true"
+    RowClick="OnRowClick"
+    RowStyleFunc="RowStyleFunc"
+    Class="no-text-select">
+        <Columns>
+            <PropertyColumn Property="x => x" Title="항목" />
+        </Columns>
+    </MudDataGrid>
+</MudPaper>
+
+@code {
+    private List<string> Items = Enumerable.Range(1, 100).Select(i => $"항목 {i}").ToList();
+    private List<string> SelectedItems = new();
+    private int? _lastSelectedIndex = null;
+    private bool _isShiftPressed = false;
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Shift")
+        {
+            _isShiftPressed = true;
+        }
+    }
+
+    private void HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Shift")
+        {
+            _isShiftPressed = false;
+        }
+    }
+
+    private void OnRowClick(DataGridRowClickEventArgs<string> args)
+    {
+        var clickedItem = args.Item;
+        var clickedIndex = Items.IndexOf(clickedItem);
+
+        if (_isShiftPressed && _lastSelectedIndex.HasValue)
+        {
+            var start = Math.Min(_lastSelectedIndex.Value, clickedIndex);
+            var end = Math.Max(_lastSelectedIndex.Value, clickedIndex);
+
+            if (start == end) return;
+
+            // 선택 범위에 해당하는 항목들을 선택 목록에 추가
+            for (int i = start; i <= end; i++)
+            {
+                var item = Items[i];
+                if (Items.IndexOf(item) == _lastSelectedIndex) continue;
+
+                if (!SelectedItems.Contains(item))
+                {
+                    SelectedItems.Add(item);
+                }
+                else
+                {
+                    SelectedItems.Remove(item);
+                }
+            }
+
+            // var range = Items.GetRange(start, end - start +1 );
+            // foreach (var item in range)
+            // {
+            //     if (SelectedItems.IndexOf(item) == clickedIndex) continue;
+
+            //     if (SelectedItems.Contains(item))
+            //     {
+            //         SelectedItems.Remove(item);
+            //     }
+            //     else
+            //     {
+            //         SelectedItems.Add(item);
+            //     }
+            // }
+        }
+        else
+        {
+            if (SelectedItems.Contains(clickedItem))
+            {
+                SelectedItems.Remove(clickedItem);
+            }
+            else
+            {
+                SelectedItems.Add(clickedItem);
+            }
+
+            _lastSelectedIndex = clickedIndex;
+        }
+    }
+
+    private void OnSelectedItemsChanged(HashSet<string> items)
+    {
+        //SelectedItems = items;
+    }
+
+    private string RowStyleFunc(object? item, int index)
+    {
+        if (SelectedItems.Contains(item))
+        {
+            // 선택된 행에 테두리, 배경색, 그림자 효과 적용
+            return "background-color: #BBDefB; border: 1px solid #1976D2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
+        }
+
+        return index % 2 == 0 ? "" : "background-color: #f5f5f5;";
+    }
+}
