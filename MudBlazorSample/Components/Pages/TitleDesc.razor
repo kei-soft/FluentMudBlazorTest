@@ -1,0 +1,65 @@
+﻿@page "/titledesc"
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudPaper Elevation="2" Class="pa-4">
+        <MudGrid>
+            <!-- 선택 행 -->
+            <MudItem xs="12">
+                <MudGrid AlignItems="Center" Style="min-height: 40px;">
+                    <MudItem xs="2" Class="d-flex align-center">
+                        <MudText Typo="Typo.body1" Class="font-weight-bold">선택</MudText>
+                    </MudItem>
+                    <MudItem xs="8" Class="d-flex align-center">
+                        <MudText Typo="Typo.body1">내용</MudText>
+                    </MudItem>
+                    <MudItem xs="2" Class="d-flex align-center justify-end">
+                        <MudCheckBox @bind-Value="isSharedUsage" Label="공통사용" />
+                    </MudItem>
+                </MudGrid>
+                <MudDivider Class="my-2" />
+            </MudItem>
+
+            <!-- 제목 행 -->
+            <MudItem xs="12">
+                <MudGrid AlignItems="Center">
+                    <MudItem xs="2" Class="d-flex align-center">
+                        <MudText Typo="Typo.body1" Class="font-weight-bold">Title</MudText>
+                    </MudItem>
+                    <MudItem xs="10" Class="d-flex align-center">
+                        <MudTextField @bind-Value="title"
+                                      Placeholder="제목을 입력하세요"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Style="width: 100%;" />
+                    </MudItem>
+                </MudGrid>
+                <MudDivider Class="my-2" />
+            </MudItem>
+
+            <!-- 설명 행 -->
+            <MudItem xs="12">
+                <MudGrid AlignItems="Start">
+                    <MudItem xs="2" Class="d-flex align-start pt-3">
+                        <MudText Typo="Typo.body1" Class="font-weight-bold">Desc</MudText>
+                    </MudItem>
+                    <MudItem xs="10" Class="d-flex align-center">
+                        <MudTextField @bind-Value="description"
+                                      Placeholder="설명을 입력하세요"
+                                      Variant="Variant.Outlined"
+                                      Lines="8"
+                                      Margin="Margin.Dense"
+                                      Style="width: 100%;" />
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code
+{
+    private bool isSharedUsage = false;
+    private string title = "";
+    private string description = "";
+
+}
