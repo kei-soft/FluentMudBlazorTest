@@ -1,0 +1,125 @@
+﻿@page "/gridcontextmenu"
+
+<MudDataGrid T="DataItem"
+Items="@items"
+RowContextMenuClick="OpenContextMenu">
+
+    <Columns>
+        <PropertyColumn Property="x => x.Id" Title="ID" />
+        <PropertyColumn Property="x => x.Name" Title="이름" />
+        <PropertyColumn Property="x => x.Category" Title="카테고리" />
+        <PropertyColumn Property="x => x.Price" Title="가격" Format="C" />
+    </Columns>
+</MudDataGrid>
+
+
+<MudMenu @ref="contextMenu"
+id="contextMenu"
+PositionAtCursor="true" 
+Modal="false">
+
+    <MudMenuItem OnClick="HandleAddMenuAction" Disabled="@(selectedItem == null)">
+        <div style="display: flex; align-items: center;">
+            <MudIcon Icon="@Icons.Material.Filled.Add" style="margin-right: 8px;" />
+            새 항목 추가
+        </div>
+    </MudMenuItem>
+
+    <MudMenuItem OnClick="HandleEditMenuAction" Disabled="@(selectedItem == null)">
+        <div style="display: flex; align-items: center;">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" style="margin-right: 8px;" />
+            편집
+        </div>
+    </MudMenuItem>
+
+    <MudMenuItem OnClick="HandleDeleteMenuAction" Disabled="@(selectedItem == null)">
+        <div style="display: flex; align-items: center;">
+            <MudIcon Icon="@Icons.Material.Filled.Delete" style="margin-right: 8px;" />
+            삭제
+        </div>
+    </MudMenuItem>
+
+</MudMenu>
+
+@code
+{
+    /// <summary>
+    /// 데이터 항목 리스트
+    /// </summary>
+    private List<DataItem> items = new();
+
+    /// <summary>
+    /// 컨텍스트 메뉴 참조 변수
+    /// </summary>
+    private MudMenu? contextMenu;
+
+    /// <summary>
+    /// 현재 선택된 항목 (우클릭 대상)
+    /// </summary>
+    private DataItem? selectedItem;
+
+    /// <summary>
+    /// 컴포넌트 초기화 시 호출 - 샘플 데이터 설정
+    /// </summary>
+    protected override void OnInitialized()
+    {
+        items = new List<DataItem>
+        {
+            new DataItem { Id = 1, Name = "노트북", Category = "전자제품", Price = 1200000, Description = "고성능 게이밍 노트북" },
+            new DataItem { Id = 2, Name = "마우스", Category = "전자제품", Price = 50000, Description = "무선 게이밍 마우스" },
+            new DataItem { Id = 3, Name = "키보드", Category = "전자제품", Price = 150000, Description = "기계식 키보드" },
+            new DataItem { Id = 4, Name = "모니터", Category = "전자제품", Price = 300000, Description = "27인치 4K 모니터" },
+            new DataItem { Id = 5, Name = "책상", Category = "가구", Price = 200000, Description = "높이 조절 책상" }
+        };
+    }
+
+    /// <summary>
+    /// 행을 우클릭했을 때 컨텍스트 메뉴를 엽니다.
+    /// </summary>
+    /// <param name="args">우클릭된 행 정보</param>
+    /// <returns></returns>
+    private async Task OpenContextMenu(DataGridRowClickEventArgs<DataItem> args)
+    {
+        selectedItem = args.Item;
+        await contextMenu.OpenMenuAsync(args.MouseEventArgs);
+    }
+
+    /// <summary>
+    /// 항목 추가 메뉴 액션 처리
+    /// </summary>
+    /// <returns></returns>
+    private async Task HandleAddMenuAction()
+    {
+        await Task.Delay(100);
+    }
+
+    /// <summary>
+    /// 항목 편집 메뉴 액션 처리
+    /// </summary>
+    /// <returns></returns>
+    private async Task HandleEditMenuAction()
+    {
+        await Task.Delay(100);
+    }
+
+    /// <summary>
+    /// 항목 삭제 메뉴 액션 처리
+    /// </summary>
+    /// <returns></returns>
+    private async Task HandleDeleteMenuAction()
+    {
+        await Task.Delay(100);
+    }
+
+    /// <summary>
+    /// 데이터 항목 클래스
+    /// </summary>
+    public class DataItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Category { get; set; } = "";
+        public decimal Price { get; set; }
+        public string Description { get; set; } = "";
+    }
+}
