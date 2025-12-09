@@ -1,0 +1,46 @@
+﻿@page "/select"
+<h3>Select</h3>
+
+<MudAutocomplete T="string"
+Label="항목 선택"
+@bind-Value="selectedValue"
+SearchFunc="@SearchItems"
+CoerceValue="true"
+Strict="true"
+ResetValueOnEmptyText="false"
+AdornmentIcon="@Icons.Material.Filled.ArrowDropDown">
+</MudAutocomplete>
+
+@code {
+    private string selectedValue;
+    private List<string> items = new()
+    {
+        "사과", "사탕", "바나나", "배", "체리", "치즈", "토마토", "포도"
+    };
+
+    protected override void OnInitialized()
+    {
+        for (int i = 0; i < 5000; i++)
+        {
+            items.Add("바나나" + i);
+        }
+
+        StateHasChanged();
+        base.OnInitialized();
+    }
+
+    private Task<IEnumerable<string>> SearchItems(string value, CancellationToken token)
+    {
+        // 항상 모든 항목을 반환 (필터링 안 함)
+        // 하지만 입력한 텍스트와 매칭되는 항목이 있으면 그것을 먼저 표시
+        if (string.IsNullOrEmpty(value))
+            return Task.FromResult(items.AsEnumerable());
+
+        // 입력한 텍스트로 시작하는 항목을 앞으로 정렬
+        var matching = items.Where(x => x.StartsWith(value, StringComparison.OrdinalIgnoreCase)).ToList();
+        var nonMatching = items.Except(matching).ToList();
+        var result = matching.Concat(nonMatching);
+
+        return Task.FromResult(result);
+    }
+}

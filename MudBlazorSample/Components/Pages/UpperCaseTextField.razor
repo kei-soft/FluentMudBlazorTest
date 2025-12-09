@@ -1,0 +1,60 @@
+﻿@page "/uppercasetextfield"
+
+<MudTextField Value="@test" T="string"
+              ValueChanged="@OnValueChanged"
+              Immediate="true" TextUpdateSuppression="false"
+              Variant="Variant.Outlined" />
+
+<MudTextField @bind-Value="test" TextUpdateSuppression="false"
+              @bind-Value:after="() => { test = test.ToUpper(); StateHasChanged(); }" Immediate="true" Variant="Variant.Outlined" />
+
+<MudTextField @bind-Value="otherTest" T="string" Immediate="true" Variant="Variant.Outlined" TextUpdateSuppression="false" />
+
+<MudTextField @key=@_counter @bind-Value="testLast" TextUpdateSuppression="false"
+              @bind-Value:after="() => { testLast = testLast.ToUpper(); InvokeAsync(StateHasChanged); }" Immediate="true" Variant="Variant.Outlined" />
+@code {
+    private string test = "";
+    private string testLast = "";
+    private int _counter = 0;
+    private string _otherTest = "";
+    private string otherTest
+    {
+        get => _otherTest;
+        set
+        {
+            if (_otherTest != value)
+            {
+                _otherTest = value.ToUpperInvariant();
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private Task OnValueChanged(string val)
+    {
+        test = val.ToUpper();
+        return InvokeAsync(StateHasChanged);
+    }
+}
+
+
+<MudTextField Mask="@mask" @bind-Value="@testValue" Variant="Variant.Outlined" />
+
+@code {
+    private string testValue ="";
+
+    // PatternMask 정의
+    private PatternMask mask = new PatternMask("XXXXXXXXXXXXXXXXXXXX")
+        {
+            MaskChars = new[]
+            {
+            new MaskChar('X', @"[\uAC00-\uD7A3a-zA-Z0-9\s]")  // 영문자와 숫자 허용
+        },
+            
+            CleanDelimiters = true,
+            Transformation = AllUpperCase  // 변환 함수 지정
+        };
+
+    // 소문자를 대문자로 변환하는 함수
+    private static char AllUpperCase(char c) => c.ToString().ToUpperInvariant()[0];
+}
