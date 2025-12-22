@@ -1,18 +1,86 @@
 ﻿@page "/counter"
 
-<PageTitle>Counter</PageTitle>
+@page "/tabs-example"
+@rendermode InteractiveServer
+@inject IJSRuntime JS
+<style>
+    /* 선택되지 않은 상태일 때 모든 탭의 active 스타일 제거 */
+    .no-active-tab .mud-tab-active {
+        color: inherit !important;
+        border-bottom-color: transparent !important;
+    }
 
-<MudText Typo="Typo.h3" GutterBottom="true">Counter</MudText>
+    .no-active-tab .mud-tab-active::before {
+        display: none !important;
+    }
+</style>
+<MudTextField T="string"></MudTextField>
 
-<MudText Typo="Typo.body1" Class="mb-4">Current count: @currentCount</MudText>
+<div id="my-tabs-container">
+<MudTabs tabindex="-1"
+        ActivePanelIndex="@activeTabIndex"
+         ActivePanelIndexChanged="@OnTabChanged"
+         Elevation="2"
+         Rounded="true"
+         ApplyEffectsToContainer="true"
+         PanelClass="pa-6"
+         Class="@(activeTabIndex == -1 ? "no-active-tab" : "")">
 
-<MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="IncrementCount">Click me</MudButton>
+    <MudTabPanel>
+        <ChildContent>
+            <MudText>Custom tab content only</MudText>
+        </ChildContent>
+        <TabContent >
+            <MudText tabindex="-1">TAB1</MudText>
+        </TabContent>
+    </MudTabPanel>
 
+    <MudTabPanel Text="두 번째 탭">
+        <div>
+            <h3>두 번째 탭 내용</h3>
+            <p>이것은 두 번째 탭의 내용입니다.</p>
+        </div>
+    </MudTabPanel>
+
+    <MudTabPanel Text="세 번째 탭">
+        <div>
+            <h3>세 번째 탭 내용</h3>
+            <p>이것은 세 번째 탭의 내용입니다.</p>
+        </div>
+    </MudTabPanel>
+</MudTabs>
+</div>
+
+@if (activeTabIndex == -1)
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">
+        탭을 선택하려면 위의 탭을 클릭하세요.
+    </MudAlert>
+}
+
+<script>
+    window.disableTabsFocus = (containerId) => {
+        // 특정 컨테이너 내부의 모든 mud-tab 요소 탐색
+        const tabs = document.querySelectorAll(`#${containerId} .mud-tab`);
+        tabs.forEach(tab => {
+            tab.setAttribute('tabindex', '-1');
+        });
+    };
+
+</script>
 @code {
-    private int currentCount = 0;
-
-    private void IncrementCount()
+    // 초기값을 -1로 설정하여 아무 탭도 선택되지 않은 상태로 시작
+    private int activeTabIndex = -1;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        currentCount++;
+        if (firstRender)
+        {
+            // 렌더링 후 JS를 호출하여 tabindex를 -1로 변경
+            await JS.InvokeVoidAsync("disableTabsFocus", "my-tabs-container");
+        }
+    }
+    private void OnTabChanged(int newIndex)
+    {
+        activeTabIndex = newIndex;
     }
 }
