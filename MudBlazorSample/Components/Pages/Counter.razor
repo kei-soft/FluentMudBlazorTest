@@ -15,6 +15,10 @@
     }
 </style>
 <MudTextField T="string"></MudTextField>
+<MudTabs UserAttributes="@(new() { { "onmouseover", "this.querySelectorAll('.mud-tab').forEach(t => t.tabIndex = -1)" } })">
+    <MudTabPanel Text="탭 1">내용 1</MudTabPanel>
+    <MudTabPanel Text="탭 2">내용 2</MudTabPanel>
+</MudTabs>
 
 <div id="my-tabs-container">
 <MudTabs tabindex="-1"
