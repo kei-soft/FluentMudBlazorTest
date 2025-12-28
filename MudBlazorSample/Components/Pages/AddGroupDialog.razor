@@ -1,0 +1,83 @@
+﻿@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="pa-0">
+            <MudText Typo="Typo.body1" Class="mb-4">
+                새로운 메뉴 그룹을 추가합니다.
+            </MudText>
+
+            <MudTextField @bind-Value="GroupName"
+                          Label="그룹명"
+                          Variant="Variant.Outlined"
+                          Required="true"
+                          Placeholder="그룹명을 입력하세요"
+                          HelperText="예: 운영자 그룹, 일반 사용자 그룹"
+                          Immediate="true"
+                          Class="mb-4" />
+
+            @if (CopyFromGroup != null)
+            {
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">
+                    <MudText Typo="Typo.body2">
+                        <strong>@CopyFromGroup.Name</strong> 그룹의 메뉴 설정이 복사됩니다.
+                        (@CopyFromGroup.MenuIds.Count 개 메뉴)
+                    </MudText>
+                </MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Normal" Dense="true" Class="mt-3">
+                    <MudText Typo="Typo.body2">
+                        선택된 메뉴 없이 빈 그룹이 생성됩니다.
+                    </MudText>
+                </MudAlert>
+            }
+        </MudContainer>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Text">
+            취소
+        </MudButton>
+        <MudButton Color="Color.Primary"
+                   Variant="Variant.Filled"
+                   OnClick="AddGroup"
+                   Disabled="@(string.IsNullOrWhiteSpace(GroupName))">
+            추가
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public MenuGroup? CopyFromGroup { get; set; }
+
+    private string GroupName { get; set; } = string.Empty;
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private void AddGroup()
+    {
+        if (string.IsNullOrWhiteSpace(GroupName))
+        {
+            return;
+        }
+
+        var newGroup = new MenuGroup
+            {
+                Name = GroupName.Trim(),
+                MenuIds = CopyFromGroup != null
+                    ? new HashSet<int>(CopyFromGroup.MenuIds)
+                    : new HashSet<int>()
+            };
+
+        MudDialog.Close(DialogResult.Ok(newGroup));
+    }
+}

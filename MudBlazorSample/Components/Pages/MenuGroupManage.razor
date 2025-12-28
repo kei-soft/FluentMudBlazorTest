@@ -1,0 +1,247 @@
+﻿@page "/menu-group-manager"
+@using System.Linq
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">메뉴 그룹 관리</MudText>
+
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4" Style="height: 600px; overflow-y: auto;">
+                <MudText Typo="Typo.h6" Class="mb-3">메뉴 그룹</MudText>
+                <MudList Clickable="true" @bind-SelectedValue="SelectedGroupId">
+                    @foreach (var group in MenuGroups)
+                    {
+                        <MudListItem Value="@group.Id" OnClick="@(() => OnGroupSelected(group.Id))">
+                            <MudText>@group.Name</MudText>
+                        </MudListItem>
+                    }
+                </MudList>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="8">
+            <MudPaper Class="pa-4" Style="height: 600px; overflow-y: auto;">
+                <MudText Typo="Typo.h6" Class="mb-3">메뉴 선택</MudText>
+                @if (SelectedGroup != null)
+                {
+                    <MudTreeView SelectedValues="SelectedMenuIds"
+                                 T="string"
+                                 SelectedValuesChanged="OnSelectedValuesChanged"
+                                 SelectionMode="SelectionMode.MultiSelection"
+                                 CheckBoxColor="Color.Primary">
+                        @foreach (var menu in RootMenus)
+                        {
+                            <MudTreeViewItem @bind-Expanded="@menu.IsExpanded" Value="@menu.Id.ToString()"
+                                             Text="@menu.Name" CheckedChanged="@((bool? isChecked) => OnMenuCheckedChanged(menu, isChecked))">
+                                @RenderMenuChildren(menu)
+                            </MudTreeViewItem>
+                        }
+                    </MudTreeView>
+                }
+                else
+                {
+                    <MudText Color="Color.Secondary">그룹을 선택하세요.</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudGrid Class="mt-4">
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddGroupDialog" Class="mr-2">
+                그룹 추가
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="SaveGroup" Disabled="@(SelectedGroup == null)">
+                저장
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    // 모델 클래스
+
+
+    // 데이터
+    private List<Menu> AllMenus = new();
+    private List<Menu> RootMenus = new();
+    private List<MenuGroup> MenuGroups = new();
+    private MenuGroup? SelectedGroup;
+    private object? SelectedGroupId;
+    private IReadOnlyCollection<string> SelectedMenuIds = new HashSet<string>();
+
+    [Inject] private IDialogService DialogService { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        InitializeSampleData();
+        BuildMenuTree();
+    }
+
+    private void InitializeSampleData()
+    {
+        // 샘플 메뉴 데이터
+        AllMenus = new List<Menu>
+        {
+            // 1단계
+            new Menu { Id = 1, ParentId = null, Name = "시스템 관리" },
+            new Menu { Id = 2, ParentId = null, Name = "사용자 관리" },
+            new Menu { Id = 3, ParentId = null, Name = "게시판 관리" },
+
+            // 2단계 (시스템 관리)
+            new Menu { Id = 11, ParentId = 1, Name = "코드 관리" },
+            new Menu { Id = 12, ParentId = 1, Name = "권한 관리" },
+            new Menu { Id = 13, ParentId = 1, Name = "메뉴 관리" },
+
+            // 2단계 (사용자 관리)
+            new Menu { Id = 21, ParentId = 2, Name = "회원 목록" },
+            new Menu { Id = 22, ParentId = 2, Name = "권한 설정" },
+
+            // 2단계 (게시판 관리)
+            new Menu { Id = 31, ParentId = 3, Name = "공지사항" },
+            new Menu { Id = 32, ParentId = 3, Name = "자료실" },
+
+            // 3단계 (권한 관리)
+            new Menu { Id = 121, ParentId = 12, Name = "역할 관리" },
+            new Menu { Id = 122, ParentId = 12, Name = "권한 매핑" },
+
+            // 3단계 (공지사항)
+            new Menu { Id = 311, ParentId = 31, Name = "일반 공지" },
+            new Menu { Id = 312, ParentId = 31, Name = "긴급 공지" }
+        };
+
+        // 샘플 그룹 데이터
+        MenuGroups = new List<MenuGroup>
+        {
+            new MenuGroup
+            {
+                Id = 1,
+                Name = "관리자 그룹",
+                MenuIds = new HashSet<int> { 1, 11, 12, 13, 121, 122, 2, 21, 22, 3, 31, 311, 312, 32 }
+            },
+            new MenuGroup
+            {
+                Id = 2,
+                Name = "사용자 그룹",
+                MenuIds = new HashSet<int> { 3, 31, 311, 32 }
+            }
+        };
+    }
+
+    private void BuildMenuTree()
+    {
+        foreach (var menu in AllMenus)
+        {
+            if (menu.ParentId.HasValue)
+            {
+                var parent = AllMenus.FirstOrDefault(m => m.Id == menu.ParentId.Value);
+                parent?.Children.Add(menu);
+            }
+        }
+
+        RootMenus = AllMenus.Where(m => !m.ParentId.HasValue).ToList();
+    }
+
+    private void OnGroupSelected(int groupId)
+    {
+        SelectedGroup = MenuGroups.FirstOrDefault(g => g.Id == groupId);
+        if (SelectedGroup != null)
+        {
+            SelectedMenuIds = new HashSet<string>(SelectedGroup.MenuIds.Select(id => id.ToString()));
+        }
+    }
+
+    private void OnSelectedValuesChanged(IReadOnlyCollection<string> values)
+    {
+        SelectedMenuIds = values;
+    }
+
+    private void OnMenuCheckedChanged(Menu menu, bool? isChecked)
+    {
+        var menuSet = new HashSet<string>(SelectedMenuIds);
+
+        if (isChecked == true)
+        {
+            CheckMenuAndChildren(menu, menuSet);
+        }
+        else if (isChecked == false)
+        {
+            UncheckMenuAndChildren(menu, menuSet);
+        }
+
+        SelectedMenuIds = menuSet;
+    }
+
+    private void CheckMenuAndChildren(Menu menu, HashSet<string> menuSet)
+    {
+        menuSet.Add(menu.Id.ToString());
+        foreach (var child in menu.Children)
+        {
+            CheckMenuAndChildren(child, menuSet);
+        }
+    }
+
+    private void UncheckMenuAndChildren(Menu menu, HashSet<string> menuSet)
+    {
+        menuSet.Remove(menu.Id.ToString());
+        foreach (var child in menu.Children)
+        {
+            UncheckMenuAndChildren(child, menuSet);
+        }
+    }
+
+    private RenderFragment RenderMenuChildren(Menu parentMenu) => builder =>
+    {
+        foreach (var child in parentMenu.Children)
+        {
+            builder.OpenComponent<MudTreeViewItem<string>>(0);
+            builder.AddAttribute(1, "Value", child.Id.ToString());
+            builder.AddAttribute(2, "Text", child.Name);
+            builder.AddAttribute(3, "Expanded", child.IsExpanded);
+            builder.AddAttribute(4, "CheckedChanged", EventCallback.Factory.Create<bool?>(this, (isChecked) => OnMenuCheckedChanged(child, isChecked)));
+
+            if (child.Children.Any())
+            {
+                builder.AddAttribute(5, "ChildContent", RenderMenuChildren(child));
+            }
+
+            builder.CloseComponent();
+        }
+    };
+
+    private async Task OpenAddGroupDialog()
+    {
+        var parameters = new DialogParameters<AddGroupDialog>
+        {
+            { "CopyFromGroup", SelectedGroup }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<AddGroupDialog>("그룹 추가", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is MenuGroup newGroup)
+        {
+            newGroup.Id = MenuGroups.Any() ? MenuGroups.Max(g => g.Id) + 1 : 1;
+            MenuGroups.Add(new MenuGroup
+                {
+                    Id = newGroup.Id,
+                    Name = newGroup.Name,
+                    MenuIds = newGroup.MenuIds
+                });
+            Snackbar.Add($"'{newGroup.Name}' 그룹이 추가되었습니다.", Severity.Success);
+        }
+    }
+
+    private void SaveGroup()
+    {
+        if (SelectedGroup != null)
+        {
+            SelectedGroup.MenuIds = new HashSet<int>(
+                SelectedMenuIds.Select(id => int.Parse(id))
+            );
+            Snackbar.Add($"'{SelectedGroup.Name}' 그룹이 저장되었습니다.", Severity.Success);
+        }
+    }
+}
