@@ -1,10 +1,18 @@
 ﻿@page "/menu-group-manager"
 @using System.Linq
 
+<!--
+    메뉴 그룹 관리 페이지
+    - 메뉴 그룹을 선택하고 해당 그룹에 메뉴를 할당
+    - 트리 구조로 메뉴를 표시하며 다중 선택 지원
+    - 그룹 추가 및 저장 기능 제공
+-->
+
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">메뉴 그룹 관리</MudText>
 
     <MudGrid>
+        <!-- 왼쪽: 메뉴 그룹 목록 -->
         <MudItem xs="12" md="4">
             <MudPaper Class="pa-4" Style="height: 600px; overflow-y: auto;">
                 <MudText Typo="Typo.h6" Class="mb-3">메뉴 그룹</MudText>
@@ -19,11 +27,13 @@
             </MudPaper>
         </MudItem>
 
+        <!-- 오른쪽: 메뉴 트리 선택 -->
         <MudItem xs="12" md="8">
             <MudPaper Class="pa-4" Style="height: 600px; overflow-y: auto;">
                 <MudText Typo="Typo.h6" Class="mb-3">메뉴 선택</MudText>
                 @if (SelectedGroup != null)
                 {
+                    <!-- 다중 선택 가능한 트리 뷰 -->
                     <MudTreeView SelectedValues="SelectedMenuIds"
                                  T="string"
                                  SelectedValuesChanged="OnSelectedValuesChanged"
@@ -46,6 +56,7 @@
         </MudItem>
     </MudGrid>
 
+    <!-- 하단: 액션 버튼 -->
     <MudGrid Class="mt-4">
         <MudItem xs="12">
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenAddGroupDialog" Class="mr-2">
@@ -59,54 +70,97 @@
 </MudContainer>
 
 @code {
-    // 모델 클래스
+    #region Fields & Properties
 
-
-    // 데이터
+    /// <summary>
+    /// 전체 메뉴 목록 (계층 구조를 포함한 모든 메뉴)
+    /// </summary>
     private List<Menu> AllMenus = new();
+
+    /// <summary>
+    /// 최상위 메뉴 목록 (ParentId가 null인 메뉴)
+    /// </summary>
     private List<Menu> RootMenus = new();
+
+    /// <summary>
+    /// 메뉴 그룹 목록
+    /// </summary>
     private List<MenuGroup> MenuGroups = new();
+
+    /// <summary>
+    /// 현재 선택된 메뉴 그룹
+    /// </summary>
     private MenuGroup? SelectedGroup;
+
+    /// <summary>
+    /// 선택된 그룹의 ID (MudList 바인딩용)
+    /// </summary>
     private object? SelectedGroupId;
+
+    /// <summary>
+    /// 선택된 메뉴 ID 컬렉션 (트리 뷰 체크박스 상태)
+    /// </summary>
     private IReadOnlyCollection<string> SelectedMenuIds = new HashSet<string>();
 
+    /// <summary>
+    /// 다이얼로그 서비스 (그룹 추가 다이얼로그 표시용)
+    /// </summary>
     [Inject] private IDialogService DialogService { get; set; } = null!;
+
+    /// <summary>
+    /// 스낵바 서비스 (알림 메시지 표시용)
+    /// </summary>
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
 
+    #endregion
+
+    #region Lifecycle Methods
+
+    /// <summary>
+    /// 컴포넌트 초기화 시 호출
+    /// 샘플 데이터를 로드하고 메뉴 트리를 구성
+    /// </summary>
     protected override void OnInitialized()
     {
         InitializeSampleData();
         BuildMenuTree();
     }
 
+    #endregion
+
+    #region Data Initialization
+
+    /// <summary>
+    /// 샘플 메뉴 및 그룹 데이터 초기화
+    /// </summary>
     private void InitializeSampleData()
     {
         // 샘플 메뉴 데이터
         AllMenus = new List<Menu>
         {
-            // 1단계
+            // 1단계 (최상위 메뉴)
             new Menu { Id = 1, ParentId = null, Name = "시스템 관리" },
             new Menu { Id = 2, ParentId = null, Name = "사용자 관리" },
             new Menu { Id = 3, ParentId = null, Name = "게시판 관리" },
 
-            // 2단계 (시스템 관리)
+            // 2단계 (시스템 관리 하위)
             new Menu { Id = 11, ParentId = 1, Name = "코드 관리" },
             new Menu { Id = 12, ParentId = 1, Name = "권한 관리" },
             new Menu { Id = 13, ParentId = 1, Name = "메뉴 관리" },
 
-            // 2단계 (사용자 관리)
+            // 2단계 (사용자 관리 하위)
             new Menu { Id = 21, ParentId = 2, Name = "회원 목록" },
             new Menu { Id = 22, ParentId = 2, Name = "권한 설정" },
 
-            // 2단계 (게시판 관리)
+            // 2단계 (게시판 관리 하위)
             new Menu { Id = 31, ParentId = 3, Name = "공지사항" },
             new Menu { Id = 32, ParentId = 3, Name = "자료실" },
 
-            // 3단계 (권한 관리)
+            // 3단계 (권한 관리 하위)
             new Menu { Id = 121, ParentId = 12, Name = "역할 관리" },
             new Menu { Id = 122, ParentId = 12, Name = "권한 매핑" },
 
-            // 3단계 (공지사항)
+            // 3단계 (공지사항 하위)
             new Menu { Id = 311, ParentId = 31, Name = "일반 공지" },
             new Menu { Id = 312, ParentId = 31, Name = "긴급 공지" }
         };
@@ -129,8 +183,13 @@
         };
     }
 
+    /// <summary>
+    /// 메뉴 계층 구조 구성
+    /// ParentId를 기반으로 부모-자식 관계를 설정하고 최상위 메뉴를 추출
+    /// </summary>
     private void BuildMenuTree()
     {
+        // 각 메뉴를 순회하며 부모 메뉴에 자식으로 추가
         foreach (var menu in AllMenus)
         {
             if (menu.ParentId.HasValue)
@@ -140,39 +199,71 @@
             }
         }
 
+        // 최상위 메뉴만 필터링 (ParentId가 null인 메뉴)
         RootMenus = AllMenus.Where(m => !m.ParentId.HasValue).ToList();
     }
 
+    #endregion
+
+    #region Event Handlers
+
+    /// <summary>
+    /// 메뉴 그룹 선택 시 호출
+    /// 선택된 그룹의 메뉴 ID를 트리 뷰에 반영
+    /// </summary>
+    /// <param name="groupId">선택된 그룹 ID</param>
     private void OnGroupSelected(int groupId)
     {
         SelectedGroup = MenuGroups.FirstOrDefault(g => g.Id == groupId);
         if (SelectedGroup != null)
         {
+            // 그룹에 할당된 메뉴 ID를 문자열로 변환하여 선택 상태로 설정
             SelectedMenuIds = new HashSet<string>(SelectedGroup.MenuIds.Select(id => id.ToString()));
         }
     }
 
+    /// <summary>
+    /// 트리 뷰의 선택 값이 변경될 때 호출
+    /// </summary>
+    /// <param name="values">선택된 메뉴 ID 컬렉션</param>
     private void OnSelectedValuesChanged(IReadOnlyCollection<string> values)
     {
         SelectedMenuIds = values;
     }
 
+    /// <summary>
+    /// 메뉴 체크박스 상태 변경 시 호출
+    /// 선택된 메뉴와 모든 하위 메뉴를 함께 체크/해제
+    /// </summary>
+    /// <param name="menu">체크 상태가 변경된 메뉴</param>
+    /// <param name="isChecked">체크 여부 (true: 체크, false: 해제, null: indeterminate)</param>
     private void OnMenuCheckedChanged(Menu menu, bool? isChecked)
     {
         var menuSet = new HashSet<string>(SelectedMenuIds);
 
         if (isChecked == true)
         {
+            // 체크: 해당 메뉴와 모든 하위 메뉴 추가
             CheckMenuAndChildren(menu, menuSet);
         }
         else if (isChecked == false)
         {
+            // 해제: 해당 메뉴와 모든 하위 메뉴 제거
             UncheckMenuAndChildren(menu, menuSet);
         }
 
         SelectedMenuIds = menuSet;
     }
 
+    #endregion
+
+    #region Helper Methods
+
+    /// <summary>
+    /// 메뉴와 모든 하위 메뉴를 선택 상태로 설정 (재귀)
+    /// </summary>
+    /// <param name="menu">체크할 메뉴</param>
+    /// <param name="menuSet">선택된 메뉴 ID 집합</param>
     private void CheckMenuAndChildren(Menu menu, HashSet<string> menuSet)
     {
         menuSet.Add(menu.Id.ToString());
@@ -182,6 +273,11 @@
         }
     }
 
+    /// <summary>
+    /// 메뉴와 모든 하위 메뉴를 선택 해제 상태로 설정 (재귀)
+    /// </summary>
+    /// <param name="menu">체크 해제할 메뉴</param>
+    /// <param name="menuSet">선택된 메뉴 ID 집합</param>
     private void UncheckMenuAndChildren(Menu menu, HashSet<string> menuSet)
     {
         menuSet.Remove(menu.Id.ToString());
@@ -191,16 +287,24 @@
         }
     }
 
+    /// <summary>
+    /// 메뉴의 하위 메뉴를 재귀적으로 렌더링
+    /// RenderFragment를 사용하여 동적으로 트리 구조 생성
+    /// </summary>
+    /// <param name="parentMenu">부모 메뉴</param>
+    /// <returns>하위 메뉴를 렌더링하는 RenderFragment</returns>
     private RenderFragment RenderMenuChildren(Menu parentMenu) => builder =>
     {
         foreach (var child in parentMenu.Children)
         {
+            // MudTreeViewItem 컴포넌트 생성
             builder.OpenComponent<MudTreeViewItem<string>>(0);
             builder.AddAttribute(1, "Value", child.Id.ToString());
             builder.AddAttribute(2, "Text", child.Name);
             builder.AddAttribute(3, "Expanded", child.IsExpanded);
             builder.AddAttribute(4, "CheckedChanged", EventCallback.Factory.Create<bool?>(this, (isChecked) => OnMenuCheckedChanged(child, isChecked)));
 
+            // 하위 메뉴가 있는 경우 재귀적으로 렌더링
             if (child.Children.Any())
             {
                 builder.AddAttribute(5, "ChildContent", RenderMenuChildren(child));
@@ -210,6 +314,14 @@
         }
     };
 
+    #endregion
+
+    #region Dialog & Save Actions
+
+    /// <summary>
+    /// 그룹 추가 다이얼로그 열기
+    /// 현재 선택된 그룹의 메뉴를 복사할 수 있는 옵션 제공
+    /// </summary>
     private async Task OpenAddGroupDialog()
     {
         var parameters = new DialogParameters<AddGroupDialog>
@@ -221,8 +333,10 @@
         var dialog = await DialogService.ShowAsync<AddGroupDialog>("그룹 추가", parameters, options);
         var result = await dialog.Result;
 
-        if (!result.Canceled && result.Data is MenuGroup newGroup)
+        // 다이얼로그가 취소되지 않고 새 그룹 데이터가 있는 경우
+        if (result != null && !result.Canceled && result.Data is MenuGroup newGroup)
         {
+            // 새 그룹 ID 생성 (기존 최대값 + 1)
             newGroup.Id = MenuGroups.Any() ? MenuGroups.Max(g => g.Id) + 1 : 1;
             MenuGroups.Add(new MenuGroup
                 {
@@ -234,14 +348,20 @@
         }
     }
 
+    /// <summary>
+    /// 현재 선택된 그룹의 메뉴 할당 정보 저장
+    /// </summary>
     private void SaveGroup()
     {
         if (SelectedGroup != null)
         {
+            // 선택된 메뉴 ID를 int로 변환하여 그룹에 저장
             SelectedGroup.MenuIds = new HashSet<int>(
                 SelectedMenuIds.Select(id => int.Parse(id))
             );
             Snackbar.Add($"'{SelectedGroup.Name}' 그룹이 저장되었습니다.", Severity.Success);
         }
     }
+
+    #endregion
 }

@@ -3,21 +3,26 @@
 <MudDialog>
     <DialogContent>
         <MudContainer Class="pa-0">
+
+            <!-- 다이얼로그 안내 문구 -->
             <MudText Typo="Typo.body1" Class="mb-4">
                 새로운 메뉴 그룹을 추가합니다.
             </MudText>
 
+            <!-- 그룹명 입력 필드 -->
             <MudTextField @bind-Value="GroupName"
-                          Label="그룹명"
-                          Variant="Variant.Outlined"
-                          Required="true"
-                          Placeholder="그룹명을 입력하세요"
+                          Label="그룹명"                       
+                          Variant="Variant.Outlined"           
+                          Required="true"                      
+                          Placeholder="그룹명을 입력하세요"   
                           HelperText="예: 운영자 그룹, 일반 사용자 그룹"
-                          Immediate="true"
+                          Immediate="true"                    
                           Class="mb-4" />
 
+            @* 기존 그룹에서 메뉴를 복사하는 경우 *@
             @if (CopyFromGroup != null)
             {
+                <!-- 복사 대상 그룹이 있을 때 안내 메시지 -->
                 <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3">
                     <MudText Typo="Typo.body2">
                         <strong>@CopyFromGroup.Name</strong> 그룹의 메뉴 설정이 복사됩니다.
@@ -27,6 +32,7 @@
             }
             else
             {
+                <!-- 복사 대상 그룹이 없을 때 안내 메시지 -->
                 <MudAlert Severity="Severity.Normal" Dense="true" Class="mt-3">
                     <MudText Typo="Typo.body2">
                         선택된 메뉴 없이 빈 그룹이 생성됩니다.
@@ -36,10 +42,15 @@
         </MudContainer>
     </DialogContent>
 
+    <!-- 다이얼로그 하단 버튼 영역 -->
     <DialogActions>
+
+        <!-- 취소 버튼 -->
         <MudButton OnClick="Cancel" Variant="Variant.Text">
             취소
         </MudButton>
+
+        <!-- 그룹 추가 버튼 -->
         <MudButton Color="Color.Primary"
                    Variant="Variant.Filled"
                    OnClick="AddGroup"
@@ -50,34 +61,59 @@
 </MudDialog>
 
 @code {
+    #region Fields & Properties
+    /// <summary>
+    /// MudDialog 인스턴스 (닫기, 취소 제어용)
+    /// </summary>
     [CascadingParameter]
     IMudDialogInstance MudDialog { get; set; } = null!;
 
+    /// <summary>
+    /// 메뉴 설정을 복사할 대상 그룹
+    /// null이면 빈 그룹 생성
+    /// </summary>
     [Parameter]
     public MenuGroup? CopyFromGroup { get; set; }
 
+    /// <summary>
+    /// 새로 생성할 그룹명
+    /// </summary>
     private string GroupName { get; set; } = string.Empty;
+    #endregion
 
+    #region Cancel
+    /// <summary>
+    /// 다이얼로그 취소 처리
+    /// </summary>
     private void Cancel()
     {
         MudDialog.Cancel();
     }
-
+    #endregion
+    #region AddGroup
+    /// <summary>
+    /// 메뉴 그룹 추가 처리
+    /// </summary>
     private void AddGroup()
     {
+        // 그룹명이 비어 있으면 처리 중단
         if (string.IsNullOrWhiteSpace(GroupName))
         {
             return;
         }
 
+        // 새 메뉴 그룹 생성
         var newGroup = new MenuGroup
-            {
-                Name = GroupName.Trim(),
-                MenuIds = CopyFromGroup != null
-                    ? new HashSet<int>(CopyFromGroup.MenuIds)
-                    : new HashSet<int>()
-            };
+        {
+            Name = GroupName.Trim(),
 
+            // 기존 그룹이 있으면 메뉴 ID 복사
+            MenuIds = CopyFromGroup != null
+                ? new HashSet<int>(CopyFromGroup.MenuIds)
+                : new HashSet<int>()
+        };
+        // 결과와 함께 다이얼로그 닫기
         MudDialog.Close(DialogResult.Ok(newGroup));
     }
+    #endregion
 }
